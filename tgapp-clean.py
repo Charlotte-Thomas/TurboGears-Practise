@@ -1,25 +1,21 @@
 from tg import expose, TGController
-# helpers
 import webhelpers2
 import webhelpers2.text
-# for serving static files
 from tg.configurator.components.statics import StaticsConfigurationComponent
-
-# db connection
 from tg.configurator.components.sqlalchemy import SQLAlchemyConfigurationComponent
-
+from tg import MinimalApplicationConfigurator
 from tg.util import Bunch
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-
 from sqlalchemy import Column, Integer, DateTime, String
 from datetime import datetime
+from wsgiref.simple_server import make_server
+
 
 DBSession = scoped_session(sessionmaker(autoflush=True, autocommit=False))
 
 DeclarativeBase = declarative_base()
 
-# TurboGears will configure a SQLAlchemy engine for us, but it will require that we provide a data model or it will just crash
 def init_model(engine):
     DBSession.configure(bind=engine)
     DeclarativeBase.metadata.create_all(engine) # Create tables if they do not exist
@@ -31,15 +27,8 @@ class Log(DeclarativeBase):
     timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)
     person = Column(String(50), nullable=False)
 
-# Controller
-class RootController(TGController):
-    # @expose()
-    # def index(self):
-    #     return 'Hello World'
 
-    # @expose('hello.xhtml')
-    # def hello(self, person=None):
-    #     return dict(person=person)
+class RootController(TGController):
     
     @expose(content_type='text/plain')
     def index(self):
@@ -52,19 +41,12 @@ class RootController(TGController):
         DBSession.commit()
         return dict(person=person)
 
-# Passing parameters to your controllers is as simple as adding 
-# them to the url with the same name of the parameters in your method, 
-# TurboGears will automatically map them to function arguments when calling an exposed method.
-# e.g. http://localhost:8080/hello?person=MyName
-
-
-# configurator
-from tg import MinimalApplicationConfigurator
 
 config = MinimalApplicationConfigurator()
 config.register(StaticsConfigurationComponent) # for static files
 config.register(SQLAlchemyConfigurationComponent)
 
+# For TurboGears serve our controller we must create the actual application:
 config.update_blueprint({
     'model': Bunch(
     DBSession=DBSession,
@@ -75,16 +57,13 @@ config.update_blueprint({
     'helpers': webhelpers2,
     'serve_static': True,
     'paths': {
-        'static_files': 'public' # can now access any static files in public directory e.g. http://localhost:8080/styles.css
+        'static_files': 'public'
     },
     'use_sqlalchemy': True,
     'sqlalchemy.url': 'sqlite:///devdata.db' # equivalent of url in SQLAlchemy tutourial in base.py
 })
 
 application = config.make_wsgi_app()
-
-# serve
-from wsgiref.simple_server import make_server
 
 print("Serving on port 8080...")
 httpd = make_server('', 8080, application)
