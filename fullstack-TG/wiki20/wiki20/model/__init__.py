@@ -5,10 +5,6 @@ import zope.sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-# import models
-from wiki20.model.auth import User, Group, Permission
-from wiki20.model.page import Page
-
 
 # Global session manager: DBSession() returns the Thread-local
 # session object appropriate for the current web request.
@@ -66,3 +62,9 @@ def init_model(engine):
 from wiki20.model.auth import User, Group, Permission
 
 __all__ = ('User', 'Group', 'Permission')
+
+
+# import models - IMPORTANT - this must always be at the end 
+# requires the rest of the model to be initialized before it can be imported
+from wiki20.model.auth import User, Group, Permission
+from wiki20.model.page import Page

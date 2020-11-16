@@ -29,7 +29,7 @@ class Log(DeclarativeBase):
 
 
 class RootController(TGController):
-    
+    # @expose() them to the web
     @expose(content_type='text/plain')
     def index(self):
         logs = DBSession.query(Log).order_by(Log.timestamp.desc()).all()

@@ -19,6 +19,9 @@ def bootstrap(command, conf, vars):
 
         model.DBSession.add(u)
 
+        page = model.Page(pagename="FrontPage", data="initial data")
+        model.DBSession.add(page)
+
         g = model.Group()
         g.group_name = 'managers'
         g.display_name = 'Managers Group'
